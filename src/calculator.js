@@ -7,15 +7,21 @@
  *  - subtraction: sub
  *  - multiplication: mul
  *  - division: div
+ *  - modulo: mod
+ *  - exponentiation (power): pow
+ *  - square root: sqrt
  *
  * Usage examples:
  *  node src/calculator.js add 2 3    # 5
  *  node src/calculator.js sub 5 2    # 3
  *  node src/calculator.js mul 4 3    # 12
  *  node src/calculator.js div 10 2   # 5
+ *  node src/calculator.js mod 10 3   # 1
+ *  node src/calculator.js pow 2 8    # 256
+ *  node src/calculator.js sqrt 16    # 4
  *
- * The module exports functions: add, sub, mul, div
- * Division by zero is handled with a clear error and non-zero exit code.
+ * The module exports functions: add, sub, mul, div, modulo, power, squareRoot
+ * Division by zero and invalid operations are handled with clear errors and non-zero exit codes.
  */
 
 function toNumberArray(args) {
@@ -54,22 +60,41 @@ function div(...nums) {
   }, nums[0]);
 }
 
+// modulo: returns remainder of a divided by b
+function modulo(a, b) {
+  if (b === 0) throw new Error('Division by zero');
+  return a % b;
+}
+
+// power: returns base raised to exponent
+function power(base, exponent) {
+  return Math.pow(base, exponent);
+}
+
+// squareRoot: returns sqrt with error on negative input
+function squareRoot(n) {
+  if (n < 0) throw new Error('Square root of negative number');
+  return Math.sqrt(n);
+}
+
 // CLI interface
 if (require.main === module) {
   const [, , cmd, ...rest] = process.argv;
   try {
     if (!cmd) {
-      console.error('No command provided. Use: add|sub|mul|div');
+      console.error('No command provided. Use: add|sub|mul|div|mod|pow|sqrt');
       process.exit(2);
     }
 
-    // support symbolic aliases too: +, -, *, x, ×, /
+    // support symbolic aliases too: +, -, *, x, ×, /, %, ^
     const command = (cmd || '').toLowerCase();
     let op = command;
     if (command === '+' ) op = 'add';
     if (command === '-' ) op = 'sub';
     if (command === '*' || command === 'x' || command === '×') op = 'mul';
     if (command === '/' || command === '÷') op = 'div';
+    if (command === '%' ) op = 'mod';
+    if (command === '^' ) op = 'pow';
 
     const nums = toNumberArray(rest);
 
@@ -87,8 +112,20 @@ if (require.main === module) {
       case 'div':
         result = div(...nums);
         break;
+      case 'mod':
+        if (nums.length < 2) throw new Error('Modulo requires two numeric arguments');
+        result = modulo(nums[0], nums[1]);
+        break;
+      case 'pow':
+        if (nums.length < 2) throw new Error('Power requires base and exponent');
+        result = power(nums[0], nums[1]);
+        break;
+      case 'sqrt':
+        if (nums.length < 1) throw new Error('Square root requires one numeric argument');
+        result = squareRoot(nums[0]);
+        break;
       default:
-        console.error('Unknown command. Supported: add, sub, mul, div (or +, -, *, /)');
+        console.error('Unknown command. Supported: add, sub, mul, div, mod, pow, sqrt (or +, -, *, /, %, ^)');
         process.exit(2);
     }
 
@@ -105,4 +142,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { add, sub, mul, div };
+module.exports = { add, sub, mul, div, modulo, power, squareRoot };
